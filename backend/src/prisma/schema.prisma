@@ -1,0 +1,77 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            String    @id @default(uuid())
+  email         String    @unique
+  password      String
+  firstName     String
+  lastName      String
+  role          UserRole
+  specialty     String?
+  shifts        Shift[]   @relation("AssignedShifts")
+  applications  ShiftApplication[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Shift {
+  id            String    @id @default(uuid())
+  startTime     DateTime
+  endTime       DateTime
+  status        ShiftStatus
+  facility      Facility  @relation(fields: [facilityId], references: [id])
+  facilityId    String
+  assignedTo    User?     @relation("AssignedShifts", fields: [assignedToId], references: [id])
+  assignedToId  String?
+  applications  ShiftApplication[]
+  requirements  String[]
+  notes         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Facility {
+  id            String    @id @default(uuid())
+  name          String
+  address       String
+  shifts        Shift[]
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model ShiftApplication {
+  id            String    @id @default(uuid())
+  shift         Shift     @relation(fields: [shiftId], references: [id])
+  shiftId       String
+  user          User      @relation(fields: [userId], references: [id])
+  userId        String
+  status        ApplicationStatus
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  FACILITY_MANAGER
+  HEALTHCARE_PROFESSIONAL
+}
+
+enum ShiftStatus {
+  OPEN
+  ASSIGNED
+  COMPLETED
+  CANCELLED
+}
+
+enum ApplicationStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
